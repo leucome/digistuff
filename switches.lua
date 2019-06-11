@@ -58,7 +58,12 @@ minetest.register_node("digistuff:button", {
 	description = "Digilines Button",
 	on_construct = function(pos)
 		local meta = minetest.get_meta(pos)
-		meta:set_string("formspec","size[8,4;]field[1,1;6,2;channel;Channel;${channel}]field[1,2;6,2;msg;Message;${msg}]button_exit[2.25,3;3,1;submit;Save]")
+		meta:set_string("formspec","size[8,5;]" ..
+			"field[1,1;6,2;channel;Channel;${channel}]" ..
+			"field[1,2;6,2;msg;Message;${msg}]" ..
+			"checkbox[1,3;protected;Protected;false]"
+			"button_exit[2.25,4;3,1;submit;Save]"
+		)
 	end,
 	after_place_node = digistuff.place_receiver,
 	after_destruct = digistuff.remove_receiver,
@@ -68,6 +73,13 @@ minetest.register_node("digistuff:button", {
 			meta:set_string("channel",fields.channel)
 			meta:set_string("msg",fields.msg)
 			meta:set_string("formspec","")
+
+			if fields.protected then
+				meta:set_int("protected", 1)
+			else
+				meta:set_int("protected", 0)
+			end
+
 			minetest.swap_node(pos, {name = "digistuff:button_off", param2=minetest.get_node(pos).param2})
 		else
 			minetest.chat_send_player(sender:get_player_name(),"Please set a channel!")
@@ -115,6 +127,12 @@ minetest.register_node("digistuff:button_off", {
 	description = "Digilines Button (off state - you hacker you!)",
 	on_rightclick = function (pos, node, clicker)
 		local meta = minetest.get_meta(pos)
+
+		if meta:get_int("protected") == 1 and minetest.is_protected(pos, clicker:get_player_name()) then
+			-- protected, ignore interaction
+			return
+		end
+
 		digiline:receptor_send(pos, digistuff.button_get_rules(node), meta:get_string("channel"), meta:get_string("msg"))
 		minetest.swap_node(pos, {name = "digistuff:button_on", param2=node.param2})
 		if minetest.get_modpath("mesecons") then minetest.sound_play("mesecons_button_push", {pos=pos}) end
@@ -163,6 +181,12 @@ minetest.register_node("digistuff:button_on", {
 	after_destruct = digistuff.remove_receiver,
 	on_rightclick = function (pos, node, clicker)
 		local meta = minetest.get_meta(pos)
+
+		if meta:get_int("protected") == 1 and minetest.is_protected(pos, clicker:get_player_name()) then
+			-- protected, ignore interaction
+			return
+		end
+
 		digiline:receptor_send(pos, digistuff.button_get_rules(node), meta:get_string("channel"), meta:get_string("msg"))
 		if minetest.get_modpath("mesecons") then minetest.sound_play("mesecons_button_push", {pos=pos}) end
 		minetest.get_node_timer(pos):start(0.25)
@@ -210,7 +234,13 @@ minetest.register_node("digistuff:wall_knob", {
 		local meta = minetest.get_meta(pos)
 		meta:set_int("min",0)
 		meta:set_int("max",14)
-		meta:set_string("formspec","size[8,4;]field[1,1;6,2;channel;Channel;${channel}]field[1,2;3,2;min;Minimum;${min}]field[4,2;3,2;max;Maximum;${max}]button_exit[2.25,3;3,1;submit;Save]")
+		meta:set_string("formspec","size[8,5;]" ..
+			"field[1,1;6,2;channel;Channel;${channel}]" ..
+			"field[1,2;3,2;min;Minimum;${min}]" ..
+			"field[4,2;3,2;max;Maximum;${max}]" ..
+			"checkbox[1,3;protected;Protected;false]" ..
+			"button_exit[2.25,4;3,1;submit;Save]"
+		)
 	end,
 	after_place_node = digistuff.place_receiver,
 	after_destruct = digistuff.remove_receiver,
@@ -224,6 +254,13 @@ minetest.register_node("digistuff:wall_knob", {
 				meta:set_int("value",math.floor(tonumber(fields.min)))
 				meta:set_string("infotext",string.format("Current setting: %d\nLeft-click to turn down or right-click to turn up",math.floor(tonumber(fields.min))))
 				meta:set_string("formspec","")
+
+				if fields.protected then
+					meta:set_int("protected", 1)
+				else
+					meta:set_int("protected", 0)
+				end
+
 				minetest.swap_node(pos, {name = "digistuff:wall_knob_configured", param2=minetest.get_node(pos).param2})
 			else
 				minetest.chat_send_player(sender:get_player_name(),"Minimum and maximum must both be numbers, and maximum must be greater than minimum")
@@ -266,6 +303,12 @@ minetest.register_node("digistuff:wall_knob_configured", {
 	after_destruct = digistuff.remove_receiver,
 	on_rightclick = function(pos,node,player)
 		local meta = minetest.get_meta(pos)
+
+		if meta:get_int("protected") == 1 and minetest.is_protected(pos, clicker:get_player_name()) then
+			-- protected, ignore interaction
+			return
+		end
+
 		local max = meta:get_int("max")
 		local value = meta:get_int("value")
 		local full = player:get_player_control().aux1
@@ -276,6 +319,12 @@ minetest.register_node("digistuff:wall_knob_configured", {
 	end,
 	on_punch = function(pos,node,player)
 		local meta = minetest.get_meta(pos)
+
+		if meta:get_int("protected") == 1 and minetest.is_protected(pos, clicker:get_player_name()) then
+			-- protected, ignore interaction
+			return
+		end
+
 		local min = meta:get_int("min")
 		local value = meta:get_int("value")
 		local full = player:get_player_control().aux1
