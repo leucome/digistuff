@@ -49,7 +49,8 @@ Once a channel is set, any messages sent on that channel will be shown on the "L
 
 How to use the NIC:
 Send a digilines signal with the URL you want to download. The HTTPRequestResult table will be sent back on the same channel.
-
+For POST requests you can send a table in the format: { url="", data="", extra_headers={} }
+NOTE: digistuff mod needs to be in the secure.http_mods setting for the NIC to work
 
 How to use the camera:
 Set the channel, distance, and radius. The camera will search for a node "distance" meters away and up to 10m down.

@@ -41,19 +41,36 @@ minetest.register_node("digistuff:nic", {
 		local meta = minetest.get_meta(pos)
 		if fields.channel then meta:set_string("channel",fields.channel) end
 	end,
-	digiline = 
+	digiline =
 	{
 		receptor = {},
 		effector = {
 			action = function(pos,node,channel,msg)
 					local meta = minetest.get_meta(pos)
 					if meta:get_string("channel") ~= channel then return end
-					if type(msg) ~= "string" then return end
-					http.fetch({
-						url = msg,
+
+					local request = {
 						timeout = 5,
 						user_agent = "Minetest Digilines Modem",
-						},
+					}
+
+					if type(msg) == "string" then
+						-- simple GET request
+						request.url = msg
+
+					elseif type(msg) == "table" and msg.url then
+						-- GET or POST with optional headers and data
+						request.url = msg.url
+						request.post_data = msg.data
+						request.extra_headers = msg.extra_headers
+
+					else
+						-- no valid data
+						return
+
+					end
+
+					http.fetch(request,
 						function(res)
 							digiline:receptor_send(pos, digiline.rules.default, channel, res)
 						end)
